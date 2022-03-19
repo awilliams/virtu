@@ -20,7 +20,7 @@ func main() {
 	ip4 := flag.String("ip4", "127.0.0.1", "Default A record response IP")
 	ip6 := flag.String("ip6", "::1", "Default AAAA record response IP")
 	upstream := flag.String("upstream", "8.8.8.8", "Upstream DNS resolver")
-	forward := flag.String("forward", "connectivitycheck.gstatic.com,pool.ntp.org", "A record names to forward to upstream DNS (separate multiple values by comma)")
+	forward := flag.String("forward", "connectivitycheck.gstatic.com, pool.ntp.org", "A record names to forward to upstream DNS (separate multiple values by comma)")
 	logDate := flag.Bool("log-date", true, "include date/time in log output")
 	flag.Parse()
 
@@ -42,11 +42,13 @@ func main() {
 
 	forwardNames := strings.Split(*forward, ",")
 	for i, n := range forwardNames {
+		n = strings.TrimSpace(n)
 		l := len(n)
-		if l == 0 || n[l-1] == '.' {
-			continue
+		if l != 0 && n[l-1] != '.' {
+			// DNS queries for domains end in '.'.
+			n = n + "."
 		}
-		forwardNames[i] = n + "."
+		forwardNames[i] = n
 	}
 
 	h := dnsHandler{
